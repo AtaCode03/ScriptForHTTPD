@@ -1,0 +1,48 @@
+#!/bin/bash
+
+#Argüman Kontrolümüzü Yapalım
+if [ $# -lt 2 ]; then
+        echo "Kullanım: "
+        echo "$0 <ZIP_URL> <Klasör_adı>"
+        exit 1
+fi
+
+#Kullanıcı Kontrolü
+if [ "$EUID" -ne 0 ];then
+        echo "Bu script root yetkisi gerektirir. Lütfen sudo ile çalıştırın:"
+        echo "sudo $0 <ZIP_URL> <Klasör_Adı>"
+        exit 1
+fi
+
+#httpd Kurulumu
+
+if ! rpm -q httpd > /dev/null 2>&1; then
+        echo "httpd kuruluyor..."
+        yum install httpd -y > /dev/null
+else
+        echo "httpd zaten kurulu, devam ediliyor"
+fi
+
+
+
+
+sudo yum install httpd wget unzip -y > /dev/null
+sudo systemctl start httpd
+sudo systemctl enable httpd
+
+mkdir -p /tmp/webfiles # -p olmalı ki varsa hata vermesin
+cd /tmp/webfiles
+
+echo
+
+wget $1 > /dev/null
+unzip $2.zip > /dev/null
+sudo cp -r $2/* /var/www/html
+echo
+
+systemctl restart httpd
+echo
+
+rm -rf /tmp/webfiles
+
+
